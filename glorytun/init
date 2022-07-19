@@ -1,24 +1,27 @@
 #!/bin/sh /etc/rc.common
+# shellcheck disable=SC2039
 # vim: set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 :
-# Copyright (C) 2015 ovh.com
 
-START=90
-STOP=10
+# shellcheck disable=SC2034
+{
+	START=90
+	STOP=10
+	USE_PROCD=1
+}
 
-USE_PROCD=1
 PROG_NAME=glorytun
-PROG=/usr/sbin/${PROG_NAME}
+PROG=/usr/sbin/$PROG_NAME
 
 _log() {
-	logger -p daemon.info -t ${PROG_NAME} "$@"
+	logger -p daemon.info -t $PROG_NAME "$@"
 }
 
 _err() {
-	logger -p daemon.err -t ${PROG_NAME} "$@"
+	logger -p daemon.err -t $PROG_NAME "$@"
 }
 
 validate_section() {
-	uci_validate_section glorytun tunnel "${1}" \
+	uci_validate_section glorytun mud "$1" \
 		'enable:bool:0'        \
 		'key:string'           \
 		'server:host'          \
@@ -29,37 +32,32 @@ validate_section() {
 start_instance() {
 	local enable key server port dev
 
-	validate_section "${1}" || {
+	validate_section "$1" || {
 		_err "validation failed"
 		return 1
 	}
 
-	[ "${enable}" = "1" ] || return 1
+	[ "$enable" = "1" ] || return
+	[ "$key"    ] || return
+	[ "$server" ] || return
+	[ "$port"   ] || return
 
-	[ -n "${key}" ] || return 1
-	[ -n "${server}" ] || return 1
-	[ -n "${port}" ] || return 1
-	[ -n "${dev}" ] || return 1
-
-	echo "${key}" > /tmp/${PROG_NAME}.key
+	keyfile="/tmp/$PROG_NAME.key"
+	( umask 077; echo "$key" > "$keyfile" )
 	key=""
 
-	_log "starting ${PROG_NAME} instance $*"
+	_log "starting $PROG_NAME instance $*"
 
 	procd_open_instance
 
-	procd_set_param command ${PROG} \
-		keyfile /tmp/${PROG_NAME}.key \
-		host "$server" \
-		port "$port" \
-		dev "$dev" \
-		retry count -1 const 5000000 \
-		timeout 5000 \
-		keepalive count 3 idle 10 interval 1 \
-		mptcp
+	procd_set_param command $PROG \
+		bind "0.0.0.0" "$port" \
+		to "$server" "$port" \
+		keyfile "$keyfile" \
+		${dev:+dev "$dev"}
 
 	procd_set_param respawn 0 30 0
-	procd_set_param file /tmp/${PROG_NAME}.key
+	procd_set_param file "$keyfile"
 
 	procd_set_param stdout 1
 	procd_set_param stderr 1
@@ -69,9 +67,9 @@ start_instance() {
 
 start_service() {
 	config_load glorytun
-	config_foreach start_instance tunnel
+	config_foreach start_instance mud
 }
 
 service_triggers() {
-	procd_add_reload_trigger glorytun network
+	procd_add_reload_trigger glorytun
 }
