@@ -30,7 +30,16 @@ define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
-	$(CP) ./files/* $(1)/
+	#copy the content of "files/" except etc/udhcpc.user
+	$(CP) ./files/bin/* $(1)/
+	$(CP) ./files/etc/hotplug.d/* $(1)/
+	$(CP) ./files/etc/init.d/* $(1)/
+	$(CP) ./files/etc/sysctl.d/* $(1)/
+	$(CP) ./files/etc/uci-defaults.d/* $(1)/
+	$(CP) ./files/lib/* $(1)/
+	$(CP) ./files/usr/* $(1)/
+	#copy content of files/etc/udhcpc.user to udhcpc file
+	cat etc/udhcpc.user >> $(1)/../../../root-x86/etc/udhcpc.user
 	$(INSTALL_DIR) $(1)/etc/config
 	touch $(1)/etc/config/$(PKG_NAME)
 endef
