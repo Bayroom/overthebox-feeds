@@ -1,4 +1,6 @@
 #!/bin/sh
+cat >> udhcpc.user << EOF
+#!/bin/sh
 # shellcheck disable=SC2154,SC1091,SC2039
 # vim: set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 :
 
@@ -136,3 +138,7 @@ case "$INTERFACE" in
 esac
 
 [ -d /var/run/config.check ] || reload_config
+
+EOF
+
+exit 0
