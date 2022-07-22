@@ -39,7 +39,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) ./files/lib/* $(1)/
 	$(CP) ./files/usr/* $(1)/
 	#copy content of files/etc/udhcpc.user to udhcpc file
-	cat etc/udhcpc.user >> $(1)/../../../root-x86/etc/udhcpc.user
+	cat ./files/etc/udhcpc.user >> $(1)/../../../root-x86/etc/udhcpc.user
 	$(INSTALL_DIR) $(1)/etc/config
 	touch $(1)/etc/config/$(PKG_NAME)
 endef
