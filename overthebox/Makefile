@@ -35,7 +35,7 @@ define Package/$(PKG_NAME)/install
 	$(CP) ./files/etc/hotplug.d/* $(1)/
 	$(CP) ./files/etc/init.d/* $(1)/
 	$(CP) ./files/etc/sysctl.d/* $(1)/
-	$(CP) ./files/etc/uci-defaults.d/* $(1)/
+	$(CP) ./files/etc/uci-defaults/* $(1)/
 	$(CP) ./files/lib/* $(1)/
 	$(CP) ./files/usr/* $(1)/
 	#copy content of files/etc/udhcpc.user to udhcpc file
