@@ -10,7 +10,7 @@ config_get multipath globals multipath
 [ "$multipath" = "enable" ] && multipath_status=1
 
 # Global MPTCP configuration
-sysctl -qw net.mptcp.mptcp_enabled="$multipath_status"
+sysctl -qw net.mptcp.enabled="$multipath_status"
 [ "$multipath_status" = "0" ] && exit 0
 
 # Configuration by interface
