@@ -4,7 +4,7 @@
 
 . /lib/functions.sh
 
-[ "$(uci -q get "network.lan.proto")" = static ] || \
+[ "$(uci -q get "network.lan.ipaddr ")" = '192.168.100.1' ] || \
 	uci -q batch <<-EOF
 	set network.lan=interface
 	set network.lan.proto=static
