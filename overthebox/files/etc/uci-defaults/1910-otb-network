@@ -11,6 +11,11 @@
 	set network.lan.ipaddr=192.168.100.1
 	set network.lan.netmask=255.255.255.0
 	set network.lan.ifname=eth0
+
+	#This "network.lan.type=bridge" creates problems on QEMU Virtual Machine
+	#set "network.lan.type=bridge"
+    set 'system.@system[0].hostname=OverTheBox'
+
 	EOF
 
 uci -q batch <<EOF
@@ -31,6 +36,7 @@ EOF
 # Set the ip rule for the lan with a pref of 100
 uci -q show network.lan_rule >/dev/null || \
 	uci -q batch <<-EOF
+	set network.lan.ip4table='lan'
 	set network.lan_rule=rule
 	set network.lan_rule.lookup=lan
 	set network.lan_rule.priority=100
@@ -129,6 +135,3 @@ config_foreach _setup interface
 if ! grep -s -q "lan" /etc/iproute2/rt_tables; then
 	echo "50 lan" >> /etc/iproute2/rt_tables
 fi
-uci -q set network.lan.ip4table='lan'
-
-#dummy comment
