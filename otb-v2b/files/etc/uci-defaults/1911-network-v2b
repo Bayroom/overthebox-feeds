@@ -3,7 +3,9 @@
 
 case "$(cat /tmp/sysinfo/board_name)" in
 	*overthebox-v2b) ;;
-	*) return 0
+	#This needs to be deleted!!!! just added in order to test on QEMU emulator.
+	*) ;;
+#	*) return 0
 esac 2>/dev/null
 
 [ "$(uci -q get "network.@switch[0]")" = switch ] && return
