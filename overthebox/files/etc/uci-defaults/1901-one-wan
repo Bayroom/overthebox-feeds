@@ -1,8 +1,6 @@
 #!/bin/sh
 # vim: set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 :
 
-echo "one-one uci default file was entered and executed" > /usr/share/oneone.txt
-
 # check for one and only one interface
 [ "$(find /sys/class/net/ -name 'eth*' | wc -l)" = 1 ] || return 0
 
