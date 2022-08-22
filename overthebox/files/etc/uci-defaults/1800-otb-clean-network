@@ -1,0 +1,12 @@
+#!/bin/sh
+# shellcheck disable=SC1091,SC2039
+# vim: set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 :
+
+. /lib/functions.sh
+
+
+
+[ "$(uci -q get "network.wan6.proto")" = 'dhcpv6' ] && \
+	uci -q batch <<-EOF
+    delete network.wan6
+	EOF
