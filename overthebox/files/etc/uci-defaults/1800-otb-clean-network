@@ -19,13 +19,13 @@
 	EOF
 
 #delete br-lan bridge from lan configuration.
-[ "$(uci get "network.lan.device")" = 'br-lan'] && \
+[ "$(uci -q get "network.lan.device")" = 'br-lan' ] && \
 	uci -q batch <<-EOF
 	delete network.lan.device
 	EOF
 
 #we do not need br-lan pre-configured.
-[ "$(uci get "network.@device[0]")" = 'device' ] && \
+[ "$(uci -q get "network.@device[0]")" = 'device' ] && \
 	uci -q batch <<-EOF
 	delete network.@device[0]
 	EOF
