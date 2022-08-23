@@ -9,6 +9,7 @@
 [ "$(uci -q get "network.wan6.proto")" = 'dhcpv6' ] && \
 	uci -q batch <<-EOF
     delete network.wan6
+    rename network.wan=wan1
 	EOF
 
 
