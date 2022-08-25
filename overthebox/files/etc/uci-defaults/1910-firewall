@@ -84,8 +84,10 @@ _update_network_list() {
 	
 	#add wan1
 	if [ "$cfg" = "wan" ] && [ "$(uci -q get "network.wan1.proto")" = 'dhcp' ]; then
-		uci -q del_list "firewall.$cfg.network=wan1"
-		uci -q add_list "firewall.$cfg.network=wan1"
+		uci -q batch <<-EOF
+		del_list "firewall.$cfg.network=wan1"
+		add_list "firewall.$cfg.network=wan1"
+		EOF
 	fi
 
 }
