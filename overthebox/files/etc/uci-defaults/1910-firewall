@@ -38,21 +38,29 @@ add_list firewall.tun.masq_src='!109.190.0.0/16'
 EOF
 
 _setup() {
+
+	#according to fw4 default config get the real zone.
+	if [ $1 = "tun" ]; then
+		cfg="$1"
+	else
+		cfg=$(uci get "firewall.$cfg.name")
+	fi
+
 	name=
-	config_get name "$1" name
+	config_get name "$cfg" name
 
 	case "$name" in
 	lan|wan)
-		uci -q rename "firewall.$1=$name"
+		uci -q rename "firewall.$cfg=$name"
 		;;
 	mptcp)
 		interface_list=
-		config_get interface_list "$1" network
+		config_get interface_list "$cfg" network
 		for interface in $interface_list; do
 			uci -q del_list firewall.wan.network="$interface"
 			uci -q add_list firewall.wan.network="$interface"
 		done
-		uci -q delete firewall."$1"
+		uci -q delete firewall."$cfg"
 		;;
 	esac
 }
@@ -69,7 +77,14 @@ _delete_mptcp_forwarding() {
 }
 
 _update_network_list() {
-	cfg="$1"
+
+	#according to fw4 default config get the real zone.
+	if [ $1 = "tun" ]; then
+		cfg="$1"
+	else
+		cfg=$(uci get "firewall.$1.name")
+	fi
+
 	interface_list=
 	config_get interface_list "$cfg" network
 
@@ -81,17 +96,6 @@ _update_network_list() {
 		uci -q del_list "firewall.$cfg.network=$interface"
 		uci -q add_list "firewall.$cfg.network=$interface"
 	done
-	
-	echo "I executed _update_network_list from 1910" >> /usr/1910_interface_$cfg.txt
-
-	#add wan1
-	if [ "$cfg" = "wan" ] && [ "$(uci -q get "network.wan1.proto")" = 'dhcp' ]; then
-		uci -q batch <<-EOF
-		del_list "firewall.$cfg.network=wan1"
-		add_list "firewall.$cfg.network=wan1"
-		EOF
-		echo "batch of adding wan1 from 1910 to zone $1 ($cfg) was normally executed" >> /usr/1910_interface_$cfg.txt
-	fi
 
 }
 
