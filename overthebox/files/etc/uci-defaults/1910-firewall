@@ -82,12 +82,15 @@ _update_network_list() {
 		uci -q add_list "firewall.$cfg.network=$interface"
 	done
 	
+	echo "I executed _update_network_list from 1910" >> /usr/1910_interface_$cfg.txt
+
 	#add wan1
 	if [ "$cfg" = "wan" ] && [ "$(uci -q get "network.wan1.proto")" = 'dhcp' ]; then
 		uci -q batch <<-EOF
 		del_list "firewall.$cfg.network=wan1"
 		add_list "firewall.$cfg.network=wan1"
 		EOF
+		echo "batch of adding wan1 from 1910 to zone $1 ($cfg) was normally executed" >> /usr/1910_interface_$cfg.txt
 	fi
 
 }
