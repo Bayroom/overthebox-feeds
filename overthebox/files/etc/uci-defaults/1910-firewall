@@ -38,29 +38,21 @@ add_list firewall.tun.masq_src='!109.190.0.0/16'
 EOF
 
 _setup() {
-
-	#according to fw4 default config get the real zone.
-	if [ $1 = "tun" ]; then
-		cfg="$1"
-	else
-		cfg=$(uci get "firewall.$cfg.name")
-	fi
-
 	name=
-	config_get name "$cfg" name
+	config_get name "$1" name
 
 	case "$name" in
 	lan|wan)
-		uci -q rename "firewall.$cfg=$name"
+		uci -q rename "firewall.$1=$name"
 		;;
 	mptcp)
 		interface_list=
-		config_get interface_list "$cfg" network
+		config_get interface_list "$1" network
 		for interface in $interface_list; do
 			uci -q del_list firewall.wan.network="$interface"
 			uci -q add_list firewall.wan.network="$interface"
 		done
-		uci -q delete firewall."$cfg"
+		uci -q delete firewall."$1"
 		;;
 	esac
 }
