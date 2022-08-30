@@ -118,10 +118,16 @@ _zone_tun_redirect() {
 }
 
 #add config load network trying to add wan1 to env variable 
-config_load network
+uci show network >> /usr/network1.txt
+uci show firewall >> /usr/firewall1.txt
+
 config_load firewall
 config_foreach _update_network_list zone
 config_foreach _setup zone
+
+uci show network >> /usr/network2.txt
+uci show firewall >> /usr/firewall2.txt
+
 config_foreach _delete_mptcp_forwarding forwarding
 config_foreach _lowercase_proto rule
 config_foreach _lowercase_proto redirect
