@@ -117,6 +117,8 @@ _zone_tun_redirect() {
 	uci -q set "firewall.$cfg.src=tun"
 }
 
+#add config load network trying to add wan1 to env variable 
+config_load network
 config_load firewall
 config_foreach _update_network_list zone
 config_foreach _setup zone
