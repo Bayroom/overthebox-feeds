@@ -41,7 +41,7 @@ manage_if0() {
 	done
 
 	if uci -q get "network.lan_if$_id" >/dev/null; then
-		_ifname="$(uci -q get "network.${INTERFACE}_dev.ifname")" || return
+		_device="$(uci -q get "network.${INTERFACE}_dev.device")" || return
 		_macaddr="$(cat "/sys/class/net/$DEVICE/address")" || return
 
 		_log "create interface if$_id with ip $ip"
@@ -50,10 +50,10 @@ manage_if0() {
 		set network.if${_id}_dev=device
 		set network.if${_id}_dev.name=if$_id
 		set network.if${_id}_dev.type=macvlan
-		set network.if${_id}_dev.ifname=$_ifname
+		set network.if${_id}_dev.device=$_device
 		set network.if${_id}_dev.macaddr=$_macaddr
 		set network.if${_id}=interface
-		set network.if${_id}.ifname=if$_id
+		set network.if${_id}.device=if$_id
 		set network.if${_id}.proto=static
 		set network.if${_id}.ipaddr=$ip
 		set network.if${_id}.netmask=$subnet
@@ -87,15 +87,15 @@ manage_if0() {
 		_log "create interface lan_if$_id with ip $ip"
 
 		if [ "$(uci -q get "network.lan.type")" = bridge ]; then
-			lan_ifname="br-lan"
+			lan_device="br-lan"
 		else
-			lan_ifname="$(uci -q get network.lan.ifname)"
+			lan_device="$(uci -q get network.lan.device)"
 		fi
 
 		uci -q batch <<-EOF
 		set network.lan_if${_id}=interface
 		set network.lan_if${_id}.proto=static
-		set network.lan_if${_id}.ifname=$lan_ifname
+		set network.lan_if${_id}.device=$lan_device
 		set network.lan_if${_id}.ipaddr=$ip
 		set network.lan_if${_id}.netmask=$subnet
 		set network.${INTERFACE}_dev.macaddr=auto.lan_if$_id

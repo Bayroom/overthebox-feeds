@@ -26,7 +26,7 @@ otb_set_switch() {
 		v=$(uci -q add network switch_vlan)
 		uci -q batch <<-EOF
 		set network.$n=interface
-		set network.$n.ifname='eth0.$vlan'
+		set network.$n.device='eth0.$vlan'
 		set network.$n.proto='$proto'
 		set network.$v.device='$dev'
 		set network.$v.vlan='$vlan'

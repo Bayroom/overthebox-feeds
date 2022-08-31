@@ -61,23 +61,23 @@ dhcp_calc() {
 }
 
 dhcp_check() {
-	local ifname="$1"
-	local stamp="${BASEDHCPSTAMPFILE_CFG}.${ifname}.dhcp"
+	local device="$1"
+	local stamp="${BASEDHCPSTAMPFILE_CFG}.${device}.dhcp"
 	local rv=0
 
 	[ -s "$stamp" ] && return $(cat "$stamp")
 
 	# If there's no carrier yet, skip this interface.
 	# The init script will be called again once the link is up
-	case "$(devstatus "$ifname" | jsonfilter -e @.carrier)" in
+	case "$(devstatus "$device" | jsonfilter -e @.carrier)" in
 		false) return 1;;
 	esac
 
-	udhcpc -n -q -s /bin/true -t 1 -i "$ifname" >&- && rv=1 || rv=0
+	udhcpc -n -q -s /bin/true -t 1 -i "$device" >&- && rv=1 || rv=0
 
 	[ $rv -eq 1 ] && \
 		logger -t dnsmasq \
-			"found already running DHCP-server on interface '$ifname'" \
+			"found already running DHCP-server on interface '$device'" \
 			"refusing to start, use 'option force 1' to override"
 
 	echo $rv > "$stamp"
@@ -138,13 +138,13 @@ append_ipset() {
 }
 
 append_interface() {
-	network_get_device ifname "$1" || ifname="$1"
-	xappend "--interface=$ifname"
+	network_get_device device "$1" || device="$1"
+	xappend "--interface=$device"
 }
 
 append_notinterface() {
-	network_get_device ifname "$1" || ifname="$1"
-	xappend "--except-interface=$ifname"
+	network_get_device device "$1" || device="$1"
+	xappend "--except-interface=$device"
 }
 
 append_addnhosts() {
@@ -345,13 +345,13 @@ dhcp_host_add() {
 
 dhcp_this_host_add() {
 	local net="$1"
-	local ifname="$2"
+	local device="$2"
 	local mode="$3"
 	local routerstub routername ifdashname
 	local lanaddr lanaddr6 lanaddrs6 ulaprefix
 
 	if [ "$mode" -gt 0 ] ; then
-		ifdashname="${ifname//./-}"
+		ifdashname="${device//./-}"
 		routerstub="$( md5sum /etc/os-release )"
 		routerstub="router-${routerstub// */}"
 		routername="$( uci_get system @system[0] hostname $routerstub )"
@@ -359,14 +359,14 @@ dhcp_this_host_add() {
 		if [ "$mode" -gt 1 ] ; then
 			if [ "$mode" -gt 2 ] ; then
 				if [ "$mode" -gt 3 ] ; then
-					append_interface_name "$ifdashname.$routername.$DOMAIN" "$ifname"
+					append_interface_name "$ifdashname.$routername.$DOMAIN" "$device"
 				fi
 
-				append_interface_name "$routername.$DOMAIN" "$ifname"
+				append_interface_name "$routername.$DOMAIN" "$device"
 			fi
 
 			# All IP addresses discovered by dnsmasq will be labeled (except fe80::)
-			append_interface_name "$routername" "$ifname"
+			append_interface_name "$routername" "$device"
 
 		else
 			# This uses a static host file entry for only limited addresses.
@@ -457,15 +457,15 @@ dhcp_add() {
 	config_get networkid "$cfg" networkid
 	[ -n "$networkid" ] || networkid="$net"
 
-	network_get_device ifname "$net" || return 0
+	network_get_device device "$net" || return 0
 
 	[ "$cachelocal" = "0" ] && network_get_dnsserver dnsserver "$net" && {
 		DNS_SERVERS="$DNS_SERVERS $dnsserver"
 	}
 
-	append_bool "$cfg" ignore "--no-dhcp-interface=$ifname" && {
+	append_bool "$cfg" ignore "--no-dhcp-interface=$device" && {
 		# Many ISP do not have useful names for DHCP customers (your WAN).
-		dhcp_this_host_add "$net" "$ifname" "$ADD_WAN_FQDN"
+		dhcp_this_host_add "$net" "$device" "$ADD_WAN_FQDN"
 		return 0
 	}
 
@@ -480,7 +480,7 @@ dhcp_add() {
 
 	#check for an already active dhcp server on the interface, unless 'force' is set
 	config_get_bool force "$cfg" force 0
-	[ $force -gt 0 ] || dhcp_check "$ifname" || return 0
+	[ $force -gt 0 ] || dhcp_check "$device" || return 0
 
 	config_get start "$cfg" start 100
 	config_get limit "$cfg" limit 150
@@ -496,10 +496,10 @@ dhcp_add() {
 	config_get ra_preference "$cfg" ra_preference
 	config_get dns "$cfg" dns
 
-	config_list_foreach "$cfg" "interface_name" append_interface_name "$ifname"
+	config_list_foreach "$cfg" "interface_name" append_interface_name "$device"
 
 	# Put the router host name on this DHCP served interface address(es)
-	dhcp_this_host_add "$net" "$ifname" "$ADD_LOCAL_FQDN"
+	dhcp_this_host_add "$net" "$device" "$ADD_LOCAL_FQDN"
 
 	start="$( dhcp_calc "$start" )"
 
@@ -535,15 +535,15 @@ dhcp_add() {
 
 		case $ra_preference in
 		*high*)
-			xappend "--ra-param=$ifname,high,0,7200"
+			xappend "--ra-param=$device,high,0,7200"
 			;;
 		*low*)
-			xappend "--ra-param=$ifname,low,0,7200"
+			xappend "--ra-param=$device,low,0,7200"
 			;;
 		*)
 			# Send UNSOLICITED RA at default interval and live for 2 hours.
 			# TODO: convert flexible lease time into route life time (only seconds).
-			xappend "--ra-param=$ifname,0,7200"
+			xappend "--ra-param=$device,0,7200"
 			;;
 		esac
 
@@ -555,19 +555,19 @@ dhcp_add() {
 		case $ra_management in
 		0)
 			# SLACC with DCHP for extended options
-			xappend "--dhcp-range=$nettag::,constructor:$ifname,ra-stateless,ra-names"
+			xappend "--dhcp-range=$nettag::,constructor:$device,ra-stateless,ra-names"
 			;;
 		2)
 			# DHCP address and RA only for management redirection
-			xappend "--dhcp-range=$nettag$dhcp6range,constructor:$ifname,$leasetime"
+			xappend "--dhcp-range=$nettag$dhcp6range,constructor:$device,$leasetime"
 			;;
 		3)
 			# SLAAC only but dnsmasq attempts to link HOSTNAME, DHCPv4 MAC, and SLAAC
-			xappend "--dhcp-range=$nettag::,constructor:$ifname,ra-only,ra-names"
+			xappend "--dhcp-range=$nettag::,constructor:$device,ra-only,ra-names"
 			;;
 		*)
 			# SLAAC and full DHCP
-			xappend "--dhcp-range=$nettag$dhcp6range,constructor:$ifname,slaac,ra-names,$leasetime"
+			xappend "--dhcp-range=$nettag$dhcp6range,constructor:$device,slaac,ra-names,$leasetime"
 			;;
 		esac
 
@@ -722,8 +722,8 @@ dhcp_relay_add() {
 	if [ -z "$interface" ]; then
 		xappend "--dhcp-relay=$local_addr,$server_addr"
 	else
-		network_get_device ifname "$interface" || return
-		xappend "--dhcp-relay=$local_addr,$server_addr,$ifname"
+		network_get_device device "$interface" || return
+		xappend "--dhcp-relay=$local_addr,$server_addr,$device"
 	fi
 }
 
