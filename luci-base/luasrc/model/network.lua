@@ -938,7 +938,7 @@ function protocol.add_interface(self, ifname)
 
 		-- add iface to our iface list
 		else
-			_append("network", self.sid, "ifname", ifname)
+			_append("network", self.sid, "device", ifname)
 		end
 	end
 end
@@ -951,7 +951,7 @@ function protocol.del_interface(self, ifname)
 		if wif then _filter("wireless", wif, "network", self.sid) end
 
 		-- remove the interface
-		_filter("network", self.sid, "ifname", ifname)
+		_filter("network", self.sid, "device", ifname)
 	end
 end
 
