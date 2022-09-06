@@ -965,7 +965,7 @@ function protocol.get_interface(self)
 	else
 		local ifn = nil
 		local num = { }
-		for ifn in utl.imatch(_uci:get("network", self.sid, "ifname")) do
+		for ifn in utl.imatch(_uci:get("network", self.sid, "device")) do
 			ifn = ifn:match("^[^:/]+")
 			return ifn and interface(ifn, self)
 		end
