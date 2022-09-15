@@ -235,7 +235,10 @@ _ipt_init_skeleton() {
 
     # Glue redirect
     nft add rule ip nat socks_decision ip protocol tcp jump socks_redir
-    nft add rule ip nat OUTPUT ip protocol tcp jump socks_emitted_by_myself
+
+	#Create base chain OUTPUT
+	nft create chain ip nat OUTPUT { type nat hook prerouting priority -100\; policy accept\; }
+	nft add rule ip nat OUTPUT ip protocol tcp jump socks_emitted_by_myself
 
 	# Now, everything is glued together except socks_hook which is not connected to socks_decision yet.
 	# PREROUTING isn't linked to socks_hook either, traffic doesn't flow through ss-redir for now.
