@@ -463,7 +463,7 @@ _update_ipt_monitoring_ip_rule() {
 		# Add the special rule so that when we send a packet to the monitoring_ip, it flows through ss-redir
 		# Note that the whole traffic to the API config will also go through shadowsocks (IP is the same)
 		# If shadowsocks is manually stopped, mud will provide network access to API config
-		nft add rule ip nat socks_emitted_by_myself ip protocol tcp ip daddr "$monitoring_ip/32" redirect to :$((lport + TRACKER_CS)) comment \"shadowsocks_tracker (CS$TRACKER_CS) \"
+		nft add rule ip nat socks_emitted_by_myself ip protocol tcp ip daddr "$monitoring_ip/32" redirect to :$((lport + TRACKER_CS)) comment \"shadowsocks_tracker CS$TRACKER_CS \"
 	else
 		# When there is no monitoring, don't wait for a tracker to enable routing through shadowsocks
 		# Let's plug the cable in! :p
