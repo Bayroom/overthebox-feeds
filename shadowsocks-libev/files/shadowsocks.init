@@ -97,15 +97,20 @@ _shadow_cable() {
 	# Add PREROUTING chain if not present ("create" adds a chain if not existing and returns error otherwise)
 	nft create chain ip nat PREROUTING { type nat hook prerouting priority dstnat\; policy accept\; } 2> /dev/null
 
-	if [ "$1" = "plug" ]; then
+	#Check if cable is already plugged
+	already=$(nft -a list chain ip nat PREROUTING | grep -o 'handle' | wc -l)
+
+	#Plug/Unplug
+	if [ "$1" = "plug" -a $already -lt 2 ]; then
 		_log 6 "Plugging shadowsocks cable in..."
-		nft flush chain ip nat PREROUTING #This will unplug the cable
 		nft add rule ip nat PREROUTING ip protocol tcp jump socks_hook
 
-	elif [ "$1" = "unplug" ]; then
+	elif [ "$1" = "unplug" -a $already -gt 1 ]; then
 		_log 6 "Unplugging shadowsocks cable..."
 		nft flush chain ip nat PREROUTING #This will unplug the cable
 	fi
+
+	# Do nothing and say nothing if we don't need to do anything (idempotent behaviour)
 }
 
 
