@@ -95,7 +95,7 @@ _shadow_cable() {
 	fi
 
 	# Add PREROUTING chain if not present ("create" adds a chain if not existing and returns error otherwise)
-	nft create chain ip nat PREROUTING { type nat hook prerouting priority dstnat\; policy accept\; }
+	nft create chain ip nat PREROUTING { type nat hook prerouting priority dstnat\; policy accept\; } 2> /dev/null
 
 	if [ "$1" = "plug" ]; then
 		_log 6 "Plugging shadowsocks cable in..."
@@ -215,11 +215,11 @@ _ipt_init_skeleton() {
 	_ipt_clean_all
 
     #Create table NAT. This Table is of type ip with symbolic name "nat"
-    nft create table ip nat 
+    nft create table ip nat 2> /dev/null
 
 	# Create all custom chains in the NAT table
 	for chain in $CHAINS; do
-        nft create chain ip nat $chain
+        nft create chain ip nat $chain 2> /dev/null
 	done
 
     #Create now the set of IPs
@@ -237,7 +237,7 @@ _ipt_init_skeleton() {
     nft add rule ip nat socks_decision ip protocol tcp jump socks_redir
 
 	#Create base chain OUTPUT
-	nft create chain ip nat OUTPUT { type nat hook prerouting priority -100\; policy accept\; }
+	nft create chain ip nat OUTPUT { type nat hook output priority -100\; policy accept\; } 2> /dev/null
 	nft add rule ip nat OUTPUT ip protocol tcp jump socks_emitted_by_myself
 
 	# Now, everything is glued together except socks_hook which is not connected to socks_decision yet.
