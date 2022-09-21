@@ -103,7 +103,7 @@ _shadow_cable() {
 	#Plug/Unplug
 	if [ "$1" = "plug" -a $already -lt 2 ]; then
 		_log 6 "Plugging shadowsocks cable in..."
-		nft add rule ip nat PREROUTING ip protocol tcp jump socks_hook
+		nft add rule ip nat PREROUTING ip protocol tcp counter jump socks_hook
 
 	elif [ "$1" = "unplug" -a $already -gt 1 ]; then
 		_log 6 "Unplugging shadowsocks cable..."
@@ -143,18 +143,18 @@ _shadow_init_once() {
 _ipt_clean_all() {
 
     #Flush table NAT
-    nft flush table ip nat
+    nft flush table ip nat 2> /dev/null
 
     #Delete table NAT's added chains
 	for chain in $CHAINS; do
-        nft delete chain ip nat $chain
+        nft delete chain ip nat $chain 2> /dev/null
 	done
 
     #Now let's delete NAT table
-    nft delete table ip nat
+    nft delete table ip nat 2> /dev/null
 
 	# Finally let's delete the set that we created !
-    nft delete set ip nat socks_bypass 
+    nft delete set ip nat socks_bypass 2> /dev/null
 }
 
 # This validates shadowsocks uci configuration
@@ -233,17 +233,17 @@ _ipt_init_skeleton() {
 	# Glue all chains and ipset together
 
     # Glue bypass set to walk through
-    nft add rule ip nat socks_decision ip protocol tcp ip saddr @socks_bypass accept
+    nft add rule ip nat socks_decision ip protocol tcp ip saddr @socks_bypass counter accept
 	for port in $BYPASSED_PORTS; do
-        nft add rule ip nat socks_decision tcp dport { $port } accept
+        nft add rule ip nat socks_decision tcp dport { $port } counter accept
 	done
 
     # Glue redirect
-    nft add rule ip nat socks_decision ip protocol tcp jump socks_redir
+    nft add rule ip nat socks_decision ip protocol tcp counter jump socks_redir
 
 	#Create base chain OUTPUT
 	nft create chain ip nat OUTPUT { type nat hook output priority -100\; policy accept\; } 2> /dev/null
-	nft add rule ip nat OUTPUT ip protocol tcp jump socks_emitted_by_myself
+	nft add rule ip nat OUTPUT ip protocol tcp counter jump socks_emitted_by_myself
 
 	# Now, everything is glued together except socks_hook which is not connected to socks_decision yet.
 	# PREROUTING isn't linked to socks_hook either, traffic doesn't flow through ss-redir for now.
@@ -319,11 +319,11 @@ _populate_ipt_socks_redir() {
 
 	# Let's add one rule per CS DSCP
 	for i in $(seq 1 $MAX_DSCP_CS); do
-		nft add rule ip nat socks_redir ip protocol tcp ip dscp "cs$i" redirect to :$((lport + i)) comment \"CS$i\"
+		nft add rule ip nat socks_redir ip protocol tcp ip dscp "cs$i" counter redirect to :$((lport + i)) comment \"CS$i\"
 	done
 
 	# Let's add the default rule at the bottom
-	nft add rule ip nat socks_redir ip protocol tcp redirect to :$lport
+	nft add rule ip nat socks_redir ip protocol tcp counter redirect to :$lport
 }
 
 # Here is the update of the ipset "socks_bypass"
@@ -448,7 +448,7 @@ _update_socks_hook_one_if() {
 	config_load network
 	config_get device "$1" device "$1"
 
-	nft add rule ip nat socks_hook iifname "$device" jump socks_decision
+	nft add rule ip nat socks_hook iifname "$device" counter jump socks_decision
 }
 
 # If the param "monitoring_ip" is there, we need to add an ipt rule to nat/OUTPUT
@@ -468,7 +468,7 @@ _update_ipt_monitoring_ip_rule() {
 		# Add the special rule so that when we send a packet to the monitoring_ip, it flows through ss-redir
 		# Note that the whole traffic to the API config will also go through shadowsocks (IP is the same)
 		# If shadowsocks is manually stopped, mud will provide network access to API config
-		nft add rule ip nat socks_emitted_by_myself ip protocol tcp ip daddr "$monitoring_ip/32" redirect to :$((lport + TRACKER_CS)) comment \"shadowsocks_tracker CS$TRACKER_CS \"
+		nft add rule ip nat socks_emitted_by_myself ip protocol tcp ip daddr "$monitoring_ip/32" counter redirect to :$((lport + TRACKER_CS)) comment \"shadowsocks_tracker CS$TRACKER_CS \"
 	else
 		# When there is no monitoring, don't wait for a tracker to enable routing through shadowsocks
 		# Let's plug the cable in! :p
