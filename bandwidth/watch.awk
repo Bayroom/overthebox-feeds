@@ -40,8 +40,7 @@ function unitify (value, return_array)
         rx[$1] = (rx[$1] - $3) / interval
     }
 }
-END
-{
+END {
     printf "%7s%s%7s %4s%s%5s %4s%s\n", "", "MAC", "", "", "TX", "", "", "RX"
     for (mac in tx)
     {

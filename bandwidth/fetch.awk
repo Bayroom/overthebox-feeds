@@ -27,8 +27,7 @@
     }
 }
 
-END
-{
+END {
     if (json)
     {
         first = 1
