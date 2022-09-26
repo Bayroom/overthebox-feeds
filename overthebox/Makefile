@@ -38,7 +38,7 @@ endef
 define Package/$(PKG_NAME)/postinst
 	#!/bin/sh
 	[ -n "$${IPKG_INSTROOT}" ] || {
-	(. /etc/udhcpc.otb) && rm -f etc/udhcpc.otb
+	(. /etc/udhcpc.otb) && rm -f /etc/udhcpc.otb
 }
 endef
 
