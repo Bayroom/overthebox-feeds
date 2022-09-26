@@ -67,7 +67,7 @@ start_service() {
 
 stop_service() {
 	_log 6 "Stopping service..."
-	_ipt_clean_all
+	_nft_clean_all
 }
 
 # Called from tracker when it sees ss-redir/ss-server communication works
@@ -124,7 +124,7 @@ _shadow_init_once() {
 
 	if [ "$disabled" = "1" ]; then
 		_log 6 "Disabling service..."
-		_ipt_clean_all
+		_nft_clean_all
 		return 0
 	fi
 
@@ -133,14 +133,14 @@ _shadow_init_once() {
 
 	# Launch shadowsocks first to minimize the time during which traffic is routed to a non-listening-yet-process
 	_launch_shadow "$1"
-	_ipt_init_skeleton
-	_update_conf_and_ipt "$1"
+	_nft_init_skeleton
+	_update_conf_and_nft "$1"
 	_launch_tracker "$1"
 }
 
 # I'm stateless, I don't make any assumptions on iptables or ipset state.
 # Call me whenever you want to transition from unknown state to a known, clean one
-_ipt_clean_all() {
+_nft_clean_all() {
 
     #Flush table NAT
     nft flush table ip nat 2> /dev/null
@@ -214,10 +214,10 @@ _launch_shadow() {
 
 # This sets up the common ipt skeleton that doesn't change across reloads
 # Don't call me upon reload. Call me only when starting the service
-_ipt_init_skeleton() {
+_nft_init_skeleton() {
 	# First, make sure we start from a known state.
 	# Maybe we crashed last time and no one called stop_service
-	_ipt_clean_all
+	_nft_clean_all
 
     #Create table NAT. This Table is of type ip with symbolic name "nat"
     nft create table ip nat 2> /dev/null
@@ -250,12 +250,12 @@ _ipt_init_skeleton() {
 }
 
 # $1 is a ref to the shadowsocks uci section (type =client)
-_update_conf_and_ipt() {
+_update_conf_and_nft() {
 	_generate_conf "$1"
-	_populate_ipt_socks_redir "$1"
+	_populate_nft_socks_redir "$1"
 	_populate_ipset_socks_bypass "$1"
-	_populate_ipt_socks_hook
-	_update_ipt_monitoring_ip_rule "$1"
+	_populate_nft_socks_hook
+	_update_nft_monitoring_ip_rule "$1"
 }
 
 # Generate the JSON configuration file that ss-redir binary can understand
@@ -310,7 +310,7 @@ _generate_dscp_conf() {
 }
 
 # $1 is a ref to the shadowsocks uci section (type =client)
-_populate_ipt_socks_redir() {
+_populate_nft_socks_redir() {
 	local lport
 	config_get lport "$1" lport
 
@@ -410,7 +410,7 @@ _populate_ipset_socks_bypass_wan_one() {
 # This updates the socks_hook chain with interfaces the user wants to route through shadowsocks
 # This is handled in a by-interface basis.
 # Should only be executed when starting or reloading shadowsocks
-_populate_ipt_socks_hook() {
+_populate_nft_socks_hook() {
 
 	# First, reset the chain
 	nft flush chain ip nat socks_hook
@@ -453,7 +453,7 @@ _update_socks_hook_one_if() {
 
 # If the param "monitoring_ip" is there, we need to add an ipt rule to nat/OUTPUT
 # $1 is a ref to the shadowsocks uci section (type =client)
-_update_ipt_monitoring_ip_rule() {
+_update_nft_monitoring_ip_rule() {
 	local lport monitoring_ip
 
 	config_get lport "$1" lport ""
