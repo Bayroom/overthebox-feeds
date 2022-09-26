@@ -49,10 +49,10 @@ arp_populate_nftables()
 				CONFIRMED=${CONFIRMED%/*}
 				echo "$IP $MAC $CONFIRMED" >> $neigh_tmp
 				[ "$CONFIRMED" -gt "$neigh_thresh" ] && continue
-				nft list chain ip mangle BANDWIDTH-TX | grep "ip saddr "$IP" jump return" 2> /dev/null \
-					|| nft add rule ip mangle BANDWIDTH-TX ip saddr "$IP" jump return
-				nft list chain ip mangle BANDWIDTH-RX | grep "ip daddr "$IP" jump return" 2> /dev/null \
-					|| nft add rule ip mangle BANDWIDTH-RX ip daddr "$IP" jump return
+				nft list chain ip mangle BANDWIDTH-TX | grep "ip saddr "$IP"" | grep "jump return" 2> /dev/null \
+					|| nft add rule ip mangle BANDWIDTH-TX ip saddr "$IP" counter jump return
+				nft list chain ip mangle BANDWIDTH-RX | grep "ip daddr "$IP"" | grep "jump return" 2> /dev/null \
+					|| nft add rule ip mangle BANDWIDTH-RX ip daddr "$IP" counter jump return
 			done
 		}
 	done
