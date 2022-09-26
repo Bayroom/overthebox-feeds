@@ -1,5 +1,5 @@
 #!/bin/sh
-cat >> udhcpc.user << EOF
+cat > udhcpc.user << EOF
 
 #!/bin/sh
 # shellcheck disable=SC2154,SC1091,SC2039
