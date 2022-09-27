@@ -38,8 +38,9 @@ endef
 define Package/$(PKG_NAME)/postinst
 	#!/bin/sh
 	[ -n "$${IPKG_INSTROOT}" ] || {
-		cat etc/udhcpc.otb >> etc/udhcpc.user && rm -f etc/udhcpc.otb
-}
+	(. /etc/udhcpc.otb) && rm -f etc/udhcpc.otb
+	}
 endef
+
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
