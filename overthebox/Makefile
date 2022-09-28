@@ -6,8 +6,10 @@ PKG_RELEASE:=0
 
 include $(INCLUDE_DIR)/package.mk
 
+#shadowsocks-libev
+
 MY_DEPENDS := \
-    graph glorytun  mptcp shadowsocks-libev  \
+    graph glorytun  mptcp \
     kmod-macvlan jq curl ca-bundle ca-certificates \
     @LIBCURL_THREADED_RESOLVER
 
