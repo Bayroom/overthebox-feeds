@@ -6,7 +6,7 @@ PKG_RELEASE:=0
 
 include $(INCLUDE_DIR)/package.mk
 
-#shadowsocks-libev
+#shadowsocks-libev # maybe to change with shadowsocks-rust
 
 MY_DEPENDS := \
     graph glorytun  mptcp \
