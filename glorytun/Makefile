@@ -12,6 +12,7 @@ PKG_VERSION:=0.0.35
 PKG_RELEASE:=4
 PKG_SOURCE:=glorytun-$(PKG_VERSION)-x86_64.bin
 PKG_SOURCE_URL:=https://github.com/angt/glorytun/releases/download/v$(PKG_VERSION)
+PKG_HASH:=e25f8cf53448e8c8e8fd7e12692a5defe24b232bc5e30d402da4b7b654b1de10
 
 include $(INCLUDE_DIR)/package.mk
 
