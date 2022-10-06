@@ -2,7 +2,7 @@
 # vim: set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4 :
 START=95
 STOP=10
-PROG_NAME=ss-local
+PROG_NAME=sslocal
 PROG=/usr/bin/$PROG_NAME
 PROG_CONF=/tmp/shadowsocks.conf
 TRACKER=/usr/bin/ss-local-track
@@ -203,7 +203,7 @@ _launch_shadow() {
 
 	for i in $(seq 1 $cpu_count); do
 		procd_open_instance
-		procd_set_param command "$PROG" -c "$PROG_CONF" -b 0.0.0.0
+		procd_set_param command "$PROG" -c "$PROG_CONF"
 		procd_set_param file "$PROG_CONF"
 		procd_set_param limits nofile="51200 51200"
 		procd_set_param respawn 0 10 0
