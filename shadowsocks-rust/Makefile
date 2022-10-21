@@ -1,8 +1,9 @@
 #
-# Copyright (C) 2021 honwen <https://github.com/honwen>
+# Copyright (C) 2022 OVHvloud 
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
+# This software was inspired from <honwen> <https://github.com/honwen>
 #
 
 include $(TOPDIR)/rules.mk
@@ -10,22 +11,11 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=shadowsocks-rust
 PKG_VERSION:=1.14.3
 PKG_RELEASE:=20220405
-
-# refer: https://github.com/honwen/openwrt-shadowsocks-rust/commit/1c42f16ba56440bffd3560aa5d1c8305f5d9e1c5
 PKG_LIBC:=musl
-ifeq ($(ARCH),arm)
-  PKG_LIBC:=musleabi
-
-  ARM_CPU_FEATURES:=$(word 2,$(subst +,$(space),$(call qstrip,$(CONFIG_CPU_TYPE))))
-  ifneq ($(filter $(ARM_CPU_FEATURES),vfp vfpv2),)
-    PKG_LIBC:=musleabihf
-  endif
-endif
-
 PKG_SOURCE:=shadowsocks-v$(PKG_VERSION).$(ARCH)-unknown-linux-$(PKG_LIBC).tar.xz
 PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/releases/download/v$(PKG_VERSION)/
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE)
-PKG_HASH:=skip
+PKG_HASH:=515e7e5e6bc426c7e81bff3beb42e713fd1460d4664fa47df855eb4175c9b8f4
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -46,28 +36,8 @@ define Package/$(PKG_NAME)/description
 This is a port of shadowsocks.
 endef
 
-define Build/Prepare
-	tar -C $(PKG_BUILD_DIR)/ -Jxf $(DL_DIR)/$(PKG_SOURCE)
-endef
-
-define Build/Compile
-	echo "$(PKG_NAME) Compile Skiped!"
-endef
-
 define Package/$(PKG_NAME)/conffiles
-/etc/config/shadowsocks-rust
-endef
-
-define Package/$(PKG_NAME)/postinst
-#!/bin/sh
-
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	if [ -f /etc/uci-defaults/$(PKG_NAME) ]; then
-		( . /etc/uci-defaults/$(PKG_NAME) ) && \
-		rm -f /etc/uci-defaults/$(PKG_NAME)
-	fi
-fi
-exit 0
+/etc/config/shadowsocks
 endef
 
 define Package/$(PKG_NAME)/install
