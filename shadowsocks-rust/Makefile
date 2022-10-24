@@ -10,12 +10,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocks-rust
 PKG_VERSION:=1.14.3
-PKG_RELEASE:=20220405
+PKG_RELEASE:=20221025
 PKG_LIBC:=musl
-PKG_SOURCE:=shadowsocks-v$(PKG_VERSION).$(ARCH)-unknown-linux-$(PKG_LIBC).tar.xz
-PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/releases/download/v$(PKG_VERSION)/
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)-$(PKG_RELEASE)
-PKG_HASH:=515e7e5e6bc426c7e81bff3beb42e713fd1460d4664fa47df855eb4175c9b8f4
+
+PKG_SOURCE:=v$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/archive/refs/tags/
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_HASH:=a41437cdae1279914f11c07a584ab8b2b21e9b08bd732ef11fb447c765202215
 
 include $(INCLUDE_DIR)/package.mk
 
