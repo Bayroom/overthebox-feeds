@@ -32,7 +32,11 @@ define Build/Compile
 endef
 
 define Build/install
+<<<<<<< HEAD
 	$(call Build/Install/Default,install install-TARGET=release)
+=======
+	$(call Build/Install/Default,install TARGET=release)
+>>>>>>> fix(Makefile): specify target for cargo build
 endef
 
 define Package/$(PKG_NAME)/config
