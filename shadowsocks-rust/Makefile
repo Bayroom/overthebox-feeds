@@ -27,6 +27,14 @@ define Package/$(PKG_NAME)
 	URL:=https://github.com/shadowsocks/shadowsocks-rust
 endef
 
+define Build/Compile
+	$(call Build/Compile/Default,TARGET=release)
+endef
+
+define Build/install
+	$(call Build/Install/Default,install install-TARGET=release)
+endef
+
 define Package/$(PKG_NAME)/config
 	config SS_RUST_TOOLS
 		depends on PACKAGE_shadowsocks-rust
