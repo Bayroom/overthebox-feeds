@@ -11,7 +11,16 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=shadowsocks-rust
 PKG_VERSION:=1.14.3
 PKG_RELEASE:=20221028
+
 PKG_LIBC:=musl
+ifeq ($(ARCH),arm)
+  PKG_LIBC:=musleabi
+
+  ARM_CPU_FEATURES:=$(word 2,$(subst +,$(space),$(call qstrip,$(CONFIG_CPU_TYPE))))
+  ifneq ($(filter $(ARM_CPU_FEATURES),vfp vfpv2),)
+    PKG_LIBC:=musleabihf
+  endif
+endif
 
 PKG_SOURCE:=shadowsocks-v$(PKG_VERSION).$(ARCH)-unknown-linux-$(PKG_LIBC).tar.xz
 PKG_SOURCE_URL:=https://github.com/shadowsocks/shadowsocks-rust/releases/download/v$(PKG_VERSION)/
@@ -25,16 +34,8 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Network
 	TITLE:=Lightweight Secured Socks5 Proxy - Rust.
 	URL:=https://github.com/shadowsocks/shadowsocks-rust
-	DEPENDS:=+libpthread +libc +libgcc +libstdccp +libm
 endef
 
-<<<<<<< HEAD
-define Build/Compile
-	$(call Build/Compile/Default,TARGET="release") 
-endef
-
-=======
->>>>>>> buildFix(Makefile): fig step install ss-rust package
 define Package/$(PKG_NAME)/config
 	config SS_RUST_TOOLS
 		depends on PACKAGE_shadowsocks-rust
@@ -70,21 +71,10 @@ endef
 
 define Package/$(PKG_NAME)/install
 
-<<<<<<< HEAD
-	$(call Build/Install/Default,install TARGET="release" PREFIX="/usr/bin")
-	
-=======
->>>>>>> buildFix(Makefile): fig step install ss-rust package
 	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ssservice $(1)/usr/bin/
 	$(INSTALL_BIN) ./files/shadowsocks.track $(1)/usr/bin/ss-local-track
 
-<<<<<<< HEAD
-	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) ./files/shadowsocks.init $(1)/etc/init.d/shadowsocks
-	
-	$(INSTALL_DIR) $(1)/etc/config
-	touch  $(1)/etc/config/shadowsocks
-=======
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/uci-defaults $(1)/etc/uci-defaults/$(PKG_NAME)
 
@@ -97,7 +87,6 @@ define Package/$(PKG_NAME)/install
 ifeq ($(CONFIG_SS_RUST_TOOLS),y)
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ssurl $(1)/usr/bin/
 endif
->>>>>>> buildFix(Makefile): fig step install ss-rust package
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
