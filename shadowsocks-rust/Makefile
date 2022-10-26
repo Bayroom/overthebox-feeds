@@ -25,14 +25,11 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Network
 	TITLE:=Lightweight Secured Socks5 Proxy - Rust.
 	URL:=https://github.com/shadowsocks/shadowsocks-rust
+	DEPENDS:=+libpthread +libc +libgcc +libstdccp +libm
 endef
 
 define Build/Compile
-	$(call Build/Compile/Default,TARGET=release)
-endef
-
-define Build/install
-	$(call Build/Install/Default,install TARGET=release)
+	$(call Build/Compile/Default,TARGET="release") 
 endef
 
 define Package/$(PKG_NAME)/config
@@ -50,18 +47,17 @@ define Package/$(PKG_NAME)/conffiles
 endef
 
 define Package/$(PKG_NAME)/install
+
+	$(call Build/Install/Default,install TARGET="release" PREFIX="/usr/bin")
+	
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ssservice $(1)/usr/bin/
 	$(INSTALL_BIN) ./files/shadowsocks.track $(1)/usr/bin/ss-local-track
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/uci-defaults $(1)/etc/uci-defaults/$(PKG_NAME)
+
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/shadowsocks.init $(1)/etc/init.d/shadowsocks
+	
 	$(INSTALL_DIR) $(1)/etc/config
 	touch  $(1)/etc/config/shadowsocks
-ifeq ($(CONFIG_SS_RUST_TOOLS),y)
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ssurl $(1)/usr/bin/
-endif
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
