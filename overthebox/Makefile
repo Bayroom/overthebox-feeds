@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 #shadowsocks-libev # maybe to change with shadowsocks-rust
 
 MY_DEPENDS := \
-    graph glorytun  mptcp \
+    graph glorytun  mptcp mptcpd\
     kmod-macvlan jq curl ca-bundle ca-certificates \
     @LIBCURL_THREADED_RESOLVER
 
