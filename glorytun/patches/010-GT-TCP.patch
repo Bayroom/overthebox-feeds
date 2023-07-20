@@ -1,0 +1,135 @@
+diff --git a/src/main.c b/src/main.c
+index 077f51c..f290ef5 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -53,6 +53,10 @@
+ #define GT_ABYTES    (16)
+ #define GT_KEYBYTES  (32)
+ 
++#ifndef IPPROTO_MPTCP
++#define IPPROTO_MPTCP IPPROTO_TCP | 0x100
++#endif
++
+ static struct {
+     volatile sig_atomic_t quit;
+     volatile sig_atomic_t info;
+@@ -114,8 +118,6 @@ enum sk_opt {
+     sk_acceptfilter,
+     sk_quickack,
+     sk_user_timeout,
+-    sk_mptcp_26,
+-    sk_mptcp_42,
+ };
+ 
+ static int sk_set (int fd, enum sk_opt opt, const void *val, socklen_t len)
+@@ -135,17 +137,17 @@ static int sk_set (int fd, enum sk_opt opt, const void *val, socklen_t len)
+         [sk_reuseaddr] = { "SO_REUSEADDR", 1, SOL_SOCKET, SO_REUSEADDR, },
+         [sk_keepalive] = { "SO_KEEPALIVE", 1, SOL_SOCKET, SO_KEEPALIVE, },
+         [sk_keepcnt] = { "TCP_KEEPCNT",
+-#ifdef TCP_KEEPCNT
++#if defined(TCP_KEEPCNT) && defined(MPTCP_KERNEL_FRIENDLY)
+             1, IPPROTO_TCP, TCP_KEEPCNT,
+ #endif
+         },
+         [sk_keepidle] = { "TCP_KEEPIDLE",
+-#ifdef TCP_KEEPIDLE
++#if defined(TCP_KEEPIDLE) && defined(MPTCP_KERNEL_FRIENDLY)
+             1, IPPROTO_TCP, TCP_KEEPIDLE,
+ #endif
+         },
+         [sk_keepintvl] = { "TCP_KEEPINTVL",
+-#ifdef TCP_KEEPINTVL
++#if defined(TCP_KEEPINTVL) &&  defined(MPTCP_KERNEL_FRIENDLY)
+             1, IPPROTO_TCP, TCP_KEEPINTVL,
+ #endif
+         },
+@@ -170,12 +172,10 @@ static int sk_set (int fd, enum sk_opt opt, const void *val, socklen_t len)
+ #endif
+         },
+         [sk_user_timeout] = { "TCP_USER_TIMEOUT",
+-#ifdef TCP_USER_TIMEOUT
++#if defined(TCP_USER_TIMEOUT) && defined(MPTCP_KERNEL_FRIENDLY)
+             1, IPPROTO_TCP, TCP_USER_TIMEOUT,
+ #endif
+         },
+-        [sk_mptcp_26] = { "MPTCP_ENABLED (26)", 1, IPPROTO_TCP, 26 },
+-        [sk_mptcp_42] = { "MPTCP_ENABLED (42)", 1, IPPROTO_TCP, 42 },
+     };
+ 
+     if (!opts[opt].present) {
+@@ -200,19 +200,10 @@ static int sk_set_int (int fd, enum sk_opt opt, int val)
+     return sk_set(fd, opt, &val, sizeof(val));
+ }
+ 
+-static void sk_set_mptcp (int fd)
+-{
+-    if (sk_set_int(fd, sk_mptcp_42, 1)==-1)
+-        sk_set_int(fd, sk_mptcp_26, 1);
+-}
+-
+ static int sk_listen (int fd, struct addrinfo *ai)
+ {
+     sk_set_int(fd, sk_reuseaddr, 1);
+ 
+-    if (gt.mptcp)
+-        sk_set_mptcp(fd);
+-
+     if (bind(fd, ai->ai_addr, ai->ai_addrlen)==-1) {
+         perror("bind");
+         return -1;
+@@ -237,9 +228,6 @@ static int sk_connect (int fd, struct addrinfo *ai)
+ {
+     fd_set_nonblock(fd);
+ 
+-    if (gt.mptcp)
+-        sk_set_mptcp(fd);
+-
+     int ret = connect(fd, ai->ai_addr, ai->ai_addrlen);
+ 
+     if (ret==-1) {
+@@ -270,10 +258,10 @@ static int sk_connect (int fd, struct addrinfo *ai)
+     return ret;
+ }
+ 
+-static int sk_create (struct addrinfo *res, int(*func)(int, struct addrinfo *))
++static int sk_create (struct addrinfo *res, int protocol, int(*func)(int, struct addrinfo *))
+ {
+     for (struct addrinfo *ai=res; ai; ai=ai->ai_next) {
+-        int fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
++        int fd = socket(ai->ai_family, ai->ai_socktype, protocol);
+ 
+         if (fd==-1)
+             continue;
+@@ -1314,7 +1302,13 @@ int main (int argc, char **argv)
+ 
+     int chacha = option_is_set(opts, "chacha20");
+ 
+-    gt.mptcp = option_is_set(opts, "mptcp");
++    if (option_is_set(opts, "mptcp")) {
++        gt.mptcp = IPPROTO_MPTCP;
++    }
++    else
++    {
++        gt.mptcp = IPPROTO_TCP;
++    }
+ 
+     if (sodium_init()==-1) {
+         gt_log("libsodium initialization has failed\n");
+@@ -1384,7 +1378,7 @@ int main (int argc, char **argv)
+     int fd = -1;
+ 
+     if (listener) {
+-        fd = sk_create(ai, sk_listen);
++        fd = sk_create(ai, gt.mptcp, sk_listen);
+ 
+         if (fd==-1)
+             return 1;
+@@ -1420,7 +1414,7 @@ int main (int argc, char **argv)
+         if (retry<LONG_MAX)
+             retry++;
+ 
+-        sock.fd = listener?sk_accept(fd):sk_create(ai, sk_connect);
++        sock.fd = listener?sk_accept(fd):sk_create(ai, gt.mptcp, sk_connect);
+ 
+         if (sock.fd==-1)
+             continue;
